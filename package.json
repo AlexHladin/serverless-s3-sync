@@ -4,7 +4,7 @@
   "description": "A plugin to sync local directories and S3 prefixes for Serverless Framework.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/*.test.js"
   },
   "keywords": [
     "serverless",
@@ -13,6 +13,9 @@
   "author": "Original: k1LoW <k1lowxb@gmail.com> (https://github.com/k1LoW). Current version author: Oleksandr Hladin <alexgladin17@gmail.com> (https://github.com/AlexHladin)",
   "repository": "AlexHladin/serverless-s3-sync",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@auth0/s3": "^1.0.1",
     "bluebird": "^3.5.4",
