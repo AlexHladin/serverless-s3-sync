@@ -1,5 +1,5 @@
 {
-  "name": "serverless-s3-sync",
+  "name": "serverless-s3-sync-v2",
   "version": "3.5.1",
   "description": "A plugin to sync local directories and S3 prefixes for Serverless Framework.",
   "main": "index.js",
@@ -10,7 +10,7 @@
     "serverless",
     "s3"
   ],
-  "author": "Original: k1LoW <k1lowxb@gmail.com> (https://github.com/k1LoW). Current version author: Oleksandr Hladin <alexgladin17@gmail.com> (https://github.com/AlexHladin)",
+  "author": "Original: k1LoW <k1lowxb@gmail.com> (https://github.com/k1LoW). V2 author: Oleksandr Hladin <alexgladin17@gmail.com> (https://github.com/AlexHladin)",
   "repository": "AlexHladin/serverless-s3-sync",
   "license": "MIT",
   "engines": {
