@@ -10,14 +10,14 @@
     "serverless",
     "s3"
   ],
-  "author": "k1LoW <k1lowxb@gmail.com> (https://github.com/k1LoW)",
-  "repository": "k1LoW/serverless-s3-sync",
+  "author": "Original: k1LoW <k1lowxb@gmail.com> (https://github.com/k1LoW). Current version author: Oleksandr Hladin <alexgladin17@gmail.com> (https://github.com/AlexHladin)",
+  "repository": "AlexHladin/serverless-s3-sync",
   "license": "MIT",
   "dependencies": {
-    "@auth0/s3": "^1.0.0",
+    "@auth0/s3": "^1.0.1",
     "bluebird": "^3.5.4",
-    "mime": "^2.4.4",
-    "minimatch": "^3.0.4"
+    "mime": "^4.1.0",
+    "minimatch": "^10.2.5"
   },
   "peerDependencies": {
     "serverless": "3.x || 4.x"
