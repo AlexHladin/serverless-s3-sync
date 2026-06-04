@@ -1,24 +1,33 @@
-# [DEVELOPMENT HAS STOPPED: This Repository is Archived] Serverless S3 Sync [![npm](https://img.shields.io/npm/v/serverless-s3-sync.svg)](https://www.npmjs.com/package/serverless-s3-sync)
+# Serverless S3 Sync [![npm](https://img.shields.io/npm/v/serverless-s3-sync-v2.svg)](https://www.npmjs.com/package/serverless-s3-sync-v2)
 
-**The development of `serverless-s3-sync` has been permanently stopped and this repository is now archived.**
+> Actively maintained fork of [serverless-s3-sync](https://github.com/k1LoW/serverless-s3-sync). A plugin to sync local directories and S3 prefixes for Serverless Framework :zap:.
 
-This means:
+## Migration from serverless-s3-sync
 
-* **This project is no longer maintained.**
-* **No further updates, security fixes, or maintenance of any kind will be provided.**
-* **All Pull Requests and Issues will be ignored.**
+The original [serverless-s3-sync](https://github.com/k1LoW/serverless-s3-sync) project is archived and no longer receives updates. The npm package name `serverless-s3-sync` remains reserved on npm to prevent a third party from publishing malicious replacements. Use **serverless-s3-sync-v2** for continued maintenance, security fixes, and Serverless Framework compatibility.
 
-We sincerely thank you for your usage and contribution.
+### Steps
 
-### Important Security Note: NPM Package Name Reservation
+1. Replace the npm package:
 
-We will be keeping the **NPM package name** (`serverless-s3-sync`) reserved indefinitely. This is a crucial security measure to prevent a third party from taking the name and distributing potentially malicious software (a **supply chain attack**). We apologize for reserving the name but must prioritize the security of users who might still rely on older versions.
+```sh
+$ npm uninstall serverless-s3-sync
+$ npm install --save serverless-s3-sync-v2
+```
 
-We strongly recommend migrating to an alternative solution immediately.
+2. Update the plugin name in `serverless.yml`:
 
----
+```yaml
+plugins:
+  - serverless-s3-sync-v2  # was: serverless-s3-sync
+```
 
-> A plugin to sync local directories and S3 prefixes for Serverless Framework :zap: .
+3. Keep your existing `custom.s3Sync` configuration — bucket rules, hooks, CLI flags (`--nos3sync`), and the `sls s3sync` command work the same way.
+
+### Requirements
+
+- **Node.js**: `serverless-s3-sync-v2` requires Node **≥ 20**.
+- **Serverless Framework**: see [Compatibility with Serverless Framework](#compatibility-with-serverless-framework) below.
 
 ## Use Case
 
@@ -30,25 +39,23 @@ We strongly recommend migrating to an alternative solution immediately.
 Run `npm install` in your Serverless project.
 
 ```sh
-$ npm install --save serverless-s3-sync
+$ npm install --save serverless-s3-sync-v2
 ```
 
 Add the plugin to your serverless.yml file
 
 ```yaml
 plugins:
-  - serverless-s3-sync
+  - serverless-s3-sync-v2
 ```
 
 ### Compatibility with Serverless Framework
 
 Version 2.0.0 is compatible with Serverless Framework v3, but it uses the legacy logging interface. Version 3.0.0 and later uses the [new logging interface](https://www.serverless.com/framework/docs/guides/plugins/cli-output).
 
-|serverless-s3-sync|Serverless Framework|
+|serverless-s3-sync-v2|Serverless Framework|
 |---|---|
-|v1.x|v1.x, v2.x|
-|v2.0.0|v1.x, v2.x, v3.x|
-|≥ v3.0.0|v3.x|
+|v1.x|v3.x, v4.x|
 
 ## Setup
 
