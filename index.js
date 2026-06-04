@@ -1,5 +1,3 @@
-'use strict';
-
 const BbPromise = require('bluebird');
 const s3 = require('@auth0/s3');
 const minimatch = require('minimatch');
@@ -9,22 +7,7 @@ const resolveStackOutput = require('./resolveStackOutput')
 const getAwsOptions = require('./getAwsOptions')
 const mime = require('mime');
 const child_process = require('child_process');
-
-const toS3Path = (osPath) => osPath.replace(new RegExp(`\\${path.sep}`, 'g'), '/');
-
-/*
-  From @auth0/s3/lib/index.js - used when uploading the file in the first place
-  - added the + character to the set that are escaped.
-  Using is is needed to update the meta data of keys that contain spaces, +, etc...
-  to avoid a Key not found exception.
-*/
-function encodeSpecialCharacters(filename) {
-  // Note: these characters are valid in URIs, but S3 does not like them for
-  // some reason.
-  return encodeURI(filename).replace(/[+!'()* ]/g, function (char) {
-    return '%' + char.charCodeAt(0).toString(16);
-  });
-}
+const { toS3Path, encodeSpecialCharacters } = require('./lib/s3-path');
 
 class ServerlessS3Sync {
   constructor(serverless, options, logging) {
