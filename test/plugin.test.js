@@ -158,11 +158,25 @@ describe('ServerlessS3Sync', () => {
   });
 
   describe('sync', () => {
-    it('resolves when s3Sync config is not an array', async () => {
+    it('throws when s3Sync config fails schema validation', () => {
+      assert.throws(
+        () => createPlugin({
+          serverless: {
+            service: {
+              custom: { s3Sync: { buckets: 'invalid' } },
+              serverless: { config: { servicePath: '/tmp' } },
+            },
+          },
+        }),
+        /Invalid custom\.s3Sync configuration/,
+      );
+    });
+
+    it('resolves when s3Sync buckets array is empty', async () => {
       const plugin = createPlugin({
         serverless: {
           service: {
-            custom: { s3Sync: { buckets: 'invalid' } },
+            custom: { s3Sync: { buckets: [] } },
             serverless: { config: { servicePath: '/tmp' } },
           },
         },
