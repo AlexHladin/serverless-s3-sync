@@ -6,7 +6,7 @@ on:
       dry_run:
         description: Validate only (npm publish --dry-run)
         type: boolean
-        default: false
+        default: true
 
 jobs:
   publish:
@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
