@@ -11,7 +11,7 @@ const fs = require('fs')
 const resolveStackOutput = require('./resolveStackOutput')
 const getAwsOptions = require('./getAwsOptions')
 const mime = require('mime')
-const child_process = require('child_process')
+const childProcess = require('child_process')
 const { toS3Path, encodeSpecialCharacters } = require('./lib/s3-path')
 const { validateS3Sync } = require('./lib/validate-s3-sync')
 
@@ -105,26 +105,26 @@ class ServerlessS3Sync {
         noSync
           ? undefined
           : this.runSyncHook(
-              () => this.sync(),
-              () => this.syncMetadata(),
-              () => this.syncBucketTags()
-            ),
+            () => this.sync(),
+            () => this.syncMetadata(),
+            () => this.syncBucketTags()
+          ),
       'after:offline:start:init': () =>
         noSync
           ? undefined
           : this.runSyncHook(
-              () => this.sync(),
-              () => this.syncMetadata(),
-              () => this.syncBucketTags()
-            ),
+            () => this.sync(),
+            () => this.syncMetadata(),
+            () => this.syncBucketTags()
+          ),
       'after:offline:start': () =>
         noSync
           ? undefined
           : this.runSyncHook(
-              () => this.sync(),
-              () => this.syncMetadata(),
-              () => this.syncBucketTags()
-            ),
+            () => this.sync(),
+            () => this.syncMetadata(),
+            () => this.syncBucketTags()
+          ),
       'before:offline:start': this.setOffline.bind(this),
       'before:offline:start:init': this.setOffline.bind(this),
       'before:remove:remove': () =>
@@ -157,7 +157,7 @@ class ServerlessS3Sync {
   }
 
   getEndpoint () {
-    return this.serverless.service.custom.s3Sync.hasOwnProperty('endpoint')
+    return this.serverless.service.custom.s3Sync.endpoint
       ? this.serverless.service.custom.s3Sync.endpoint
       : null
   }
@@ -166,16 +166,14 @@ class ServerlessS3Sync {
     if (this.options.nos3sync) {
       return true
     }
-    const noSync = this.serverless.service.custom.s3Sync.hasOwnProperty(
-      'noSync'
-    )
+    const noSync = this.serverless.service.custom.s3Sync.noSync
       ? this.serverless.service.custom.s3Sync.noSync
       : false
     return String(noSync).toUpperCase() === 'TRUE'
   }
 
   getCustomHooks () {
-    return this.serverless.service.custom.s3Sync.hasOwnProperty('hooks')
+    return this.serverless.service.custom.s3Sync.hooks
       ? this.serverless.service.custom.s3Sync.hooks
       : []
   }
@@ -246,7 +244,7 @@ class ServerlessS3Sync {
 
   sync (invokedAsCommand) {
     let s3Sync = this.serverless.service.custom.s3Sync
-    if (s3Sync.hasOwnProperty('buckets')) {
+    if (s3Sync.buckets) {
       s3Sync = s3Sync.buckets
     }
     if (!Array.isArray(s3Sync)) {
@@ -263,129 +261,138 @@ class ServerlessS3Sync {
     })
 
     const servicePath = this.servicePath
-    const promises = s3Sync.map(s => {
-      let bucketPrefix = ''
-      if (s.hasOwnProperty('bucketPrefix')) {
-        bucketPrefix = s.bucketPrefix
-      }
-      let acl = 'private'
-      if (s.hasOwnProperty('acl')) {
-        acl = s.acl
-      }
-      if (s.hasOwnProperty('enabled') && s.enabled === false) {
-        return
-      }
-      let followSymlinks = false
-      if (s.hasOwnProperty('followSymlinks')) {
-        followSymlinks = s.followSymlinks
-      }
-      let defaultContentType = undefined
-      if (s.hasOwnProperty('defaultContentType')) {
-        defaultContentType = s.defaultContentType
-      }
-      if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
-        throw 'Invalid custom.s3Sync'
-      }
-      let deleteRemoved = true
-      if (s.hasOwnProperty('deleteRemoved')) {
-        deleteRemoved = s.deleteRemoved
-      }
-      let preCommand = undefined
-      if (s.hasOwnProperty('preCommand')) {
-        preCommand = s.preCommand
-      }
-
-      return this.getBucketName(s).then(bucketName => {
-        if (this.options.bucket && bucketName != this.options.bucket) {
-          // if the bucket option is given, that means we're in the subcommand where we're
-          // only syncing one bucket, so only continue if this bucket name matches
-          return null
+    const promises = s3Sync
+      .filter(s => {
+        if ('enabled' in s && s.enabled === false) {
+          return false
         }
 
-        return new Promise(resolve => {
-          const localDir = [servicePath, s.localDir].join('/')
+        return true
+      })
+      .map(s => {
+        let bucketPrefix = ''
+        if (s.bucketPrefix) {
+          bucketPrefix = s.bucketPrefix
+        }
+        let acl = 'private'
+        if (s.acl) {
+          acl = s.acl
+        }
 
-          // we're doing the upload in parallel for all buckets, so create one progress entry for each
-          let percent = 0
-          const getProgressMessage = () =>
-            `${localDir}: sync with bucket ${bucketName} (${percent}%)`
-          const bucketProgress = this.progress.create({
-            message: getProgressMessage()
-          })
+        let followSymlinks = false
+        if (s.followSymlinks) {
+          followSymlinks = s.followSymlinks
+        }
+        let defaultContentType
+        if (s.defaultContentType) {
+          defaultContentType = s.defaultContentType
+        }
+        if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
+          throw new Error('Invalid custom.s3Sync')
+        }
+        let deleteRemoved = true
+        if (s.deleteRemoved) {
+          deleteRemoved = s.deleteRemoved
+        }
+        let preCommand
+        if (s.preCommand) {
+          preCommand = s.preCommand
+        }
 
-          if (typeof preCommand != 'undefined') {
-            bucketProgress.update(`${localDir}: running pre-command...`)
-            child_process.execSync(preCommand, { stdio: 'inherit' })
+        return this.getBucketName(s).then(bucketName => {
+          if (this.options.bucket && bucketName !== this.options.bucket) {
+            // if the bucket option is given, that means we're in the subcommand where we're
+            // only syncing one bucket, so only continue if this bucket name matches
+            return null
           }
 
-          const params = {
-            maxAsyncS3: 5,
-            localDir,
-            deleteRemoved,
-            followSymlinks: followSymlinks,
-            getS3Params: (localFile, stat, cb) => {
-              const s3Params = {}
-              let onlyForEnv
+          return new Promise(resolve => {
+            const localDir = [servicePath, s.localDir].join('/')
 
-              if (Array.isArray(s.params)) {
-                s.params.forEach(param => {
-                  const glob = Object.keys(param)[0]
-                  if (
-                    minimatch(localFile, `${path.resolve(localDir)}/${glob}`)
-                  ) {
-                    Object.assign(s3Params, this.extractMetaParams(param) || {})
-                    onlyForEnv = s3Params['OnlyForEnv'] || onlyForEnv
-                  }
-                })
-                // to avoid parameter validation error
-                delete s3Params['OnlyForEnv']
+            // we're doing the upload in parallel for all buckets, so create one progress entry for each
+            let percent = 0
+            const getProgressMessage = () =>
+              `${localDir}: sync with bucket ${bucketName} (${percent}%)`
+            const bucketProgress = this.progress.create({
+              message: getProgressMessage()
+            })
+
+            if (typeof preCommand !== 'undefined') {
+              bucketProgress.update(`${localDir}: running pre-command...`)
+              childProcess.execSync(preCommand, { stdio: 'inherit' })
+            }
+
+            const params = {
+              maxAsyncS3: 5,
+              localDir,
+              deleteRemoved,
+              followSymlinks,
+              getS3Params: (localFile, stat, cb) => {
+                const s3Params = {}
+                let onlyForEnv
+
+                if (Array.isArray(s.params)) {
+                  s.params.forEach(param => {
+                    const glob = Object.keys(param)[0]
+                    if (
+                      minimatch(localFile, `${path.resolve(localDir)}/${glob}`)
+                    ) {
+                      Object.assign(
+                        s3Params,
+                        this.extractMetaParams(param) || {}
+                      )
+                      onlyForEnv = s3Params.OnlyForEnv || onlyForEnv
+                    }
+                  })
+                  // to avoid parameter validation error
+                  delete s3Params.OnlyForEnv
+                }
+
+                if (onlyForEnv && onlyForEnv !== this.options.env) {
+                  cb(null, null)
+                } else {
+                  cb(null, s3Params)
+                }
+              },
+              s3Params: {
+                Bucket: bucketName,
+                Prefix: bucketPrefix,
+                ACL: acl
+              }
+            }
+
+            if (typeof defaultContentType !== 'undefined') {
+              Object.assign(params, { defaultContentType })
+            }
+
+            bucketProgress.update(getProgressMessage())
+
+            const uploader = this.client().uploadDir(params)
+            uploader.on('error', err => {
+              bucketProgress.remove()
+              throw err
+            })
+            uploader.on('progress', () => {
+              if (uploader.progressTotal === 0) {
+                return
               }
 
-              if (onlyForEnv && onlyForEnv !== this.options.env) {
-                cb(null, null)
-              } else {
-                cb(null, s3Params)
+              const current =
+                Math.round(
+                  (uploader.progressAmount / uploader.progressTotal) * 10
+                ) * 10
+              if (current > percent) {
+                percent = current
+                bucketProgress.update(getProgressMessage())
               }
-            },
-            s3Params: {
-              Bucket: bucketName,
-              Prefix: bucketPrefix,
-              ACL: acl
-            }
-          }
-
-          if (typeof defaultContentType != 'undefined') {
-            Object.assign(params, { defaultContentType: defaultContentType })
-          }
-
-          bucketProgress.update(getProgressMessage())
-
-          const uploader = this.client().uploadDir(params)
-          uploader.on('error', err => {
-            bucketProgress.remove()
-            throw err
-          })
-          uploader.on('progress', () => {
-            if (uploader.progressTotal === 0) {
-              return
-            }
-
-            const current =
-              Math.round(
-                (uploader.progressAmount / uploader.progressTotal) * 10
-              ) * 10
-            if (current > percent) {
-              percent = current
-              bucketProgress.update(getProgressMessage())
-            }
-          })
-          uploader.on('end', () => {
-            bucketProgress.remove()
-            resolve('done')
+            })
+            uploader.on('end', () => {
+              bucketProgress.remove()
+              resolve('done')
+            })
           })
         })
       })
-    })
 
     return Promise.all(promises)
       .then(() => {
@@ -402,12 +409,12 @@ class ServerlessS3Sync {
 
   clear () {
     let s3Sync = this.serverless.service.custom.s3Sync
-    if (s3Sync.hasOwnProperty('buckets')) {
+    if (s3Sync.buckets) {
       s3Sync = s3Sync.buckets
     }
     if (!Array.isArray(s3Sync)) {
       this.log.notice(
-        `No configuration found for serverless-s3-sync, skipping removal...`
+        'No configuration found for serverless-s3-sync, skipping removal...'
       )
       return Promise.resolve()
     }
@@ -416,53 +423,59 @@ class ServerlessS3Sync {
       message: 'Removing objects from S3 buckets'
     })
 
-    const promises = s3Sync.map(s => {
-      let bucketPrefix = ''
-      if (s.hasOwnProperty('bucketPrefix')) {
-        bucketPrefix = s.bucketPrefix
-      }
-      if (s.hasOwnProperty('enabled') && s.enabled === false) {
-        return
-      }
-      return this.getBucketName(s).then(bucketName => {
-        return new Promise(resolve => {
-          const params = {
-            Bucket: bucketName,
-            Prefix: bucketPrefix
-          }
+    const promises = s3Sync
+      .filter(s => {
+        if ('enabled' in s && s.enabled === false) {
+          return false
+        }
 
-          let percent = 0
-          let getProgressMessage = () =>
-            `${bucketName}: removing files with prefix ${bucketPrefix} (${percent}%)`
-          const bucketProgress = this.progress.create({
-            message: getProgressMessage()
-          })
+        return true
+      })
+      .map(s => {
+        let bucketPrefix = ''
+        if (s.bucketPrefix) {
+          bucketPrefix = s.bucketPrefix
+        }
 
-          const uploader = this.client().deleteDir(params)
-          uploader.on('error', err => {
-            bucketProgress.remove()
-            throw err
-          })
-          uploader.on('progress', () => {
-            if (uploader.progressTotal === 0) {
-              return
+        return this.getBucketName(s).then(bucketName => {
+          return new Promise(resolve => {
+            const params = {
+              Bucket: bucketName,
+              Prefix: bucketPrefix
             }
-            const current =
-              Math.round(
-                (uploader.progressAmount / uploader.progressTotal) * 10
-              ) * 10
-            if (current > percent) {
-              percent = current
-              bucketProgress.update(getProgressMessage())
-            }
-          })
-          uploader.on('end', () => {
-            bucketProgress.remove()
-            resolve('done')
+
+            let percent = 0
+            const getProgressMessage = () =>
+              `${bucketName}: removing files with prefix ${bucketPrefix} (${percent}%)`
+            const bucketProgress = this.progress.create({
+              message: getProgressMessage()
+            })
+
+            const uploader = this.client().deleteDir(params)
+            uploader.on('error', err => {
+              bucketProgress.remove()
+              throw err
+            })
+            uploader.on('progress', () => {
+              if (uploader.progressTotal === 0) {
+                return
+              }
+              const current =
+                Math.round(
+                  (uploader.progressAmount / uploader.progressTotal) * 10
+                ) * 10
+              if (current > percent) {
+                percent = current
+                bucketProgress.update(getProgressMessage())
+              }
+            })
+            uploader.on('end', () => {
+              bucketProgress.remove()
+              resolve('done')
+            })
           })
         })
       })
-    })
     return Promise.all(promises)
       .then(() => {
         this.log.verbose('Removed objects from S3 buckets')
@@ -474,7 +487,7 @@ class ServerlessS3Sync {
 
   syncMetadata (invokedAsCommand) {
     let s3Sync = this.serverless.service.custom.s3Sync
-    if (s3Sync.hasOwnProperty('buckets')) {
+    if (s3Sync.buckets) {
       s3Sync = s3Sync.buckets
     }
     if (!Array.isArray(s3Sync)) {
@@ -491,23 +504,23 @@ class ServerlessS3Sync {
     const servicePath = this.servicePath
     const promises = s3Sync.map(async s => {
       let bucketPrefix = ''
-      if (s.hasOwnProperty('bucketPrefix') && s.bucketPrefix.length > 0) {
+      if (s.bucketPrefix && s.bucketPrefix.length > 0) {
         bucketPrefix = s.bucketPrefix.replace(/\/?$/, '').replace(/^\/?/, '/')
       }
       let acl = 'private'
-      if (s.hasOwnProperty('acl')) {
+      if (s.acl) {
         acl = s.acl
       }
       if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
-        throw 'Invalid custom.s3Sync'
+        throw new Error('Invalid custom.s3Sync')
       }
       const localDir = path.join(servicePath, s.localDir)
       let filesToSync = []
-      let ignoreFiles = ['.DS_Store']
+      const ignoreFiles = ['.DS_Store']
       if (Array.isArray(s.params)) {
         s.params.forEach(param => {
           const glob = Object.keys(param)[0]
-          let files = this.getLocalFiles(localDir, [])
+          const files = this.getLocalFiles(localDir, [])
           minimatch
             .match(files, `${path.resolve(localDir)}${path.sep}${glob}`, {
               matchBase: true
@@ -515,16 +528,13 @@ class ServerlessS3Sync {
             .forEach(match => {
               const params = this.extractMetaParams(param)
               if (ignoreFiles.includes(match)) return
-              if (
-                params['OnlyForEnv'] &&
-                params['OnlyForEnv'] !== this.options.env
-              ) {
+              if (params.OnlyForEnv && params.OnlyForEnv !== this.options.env) {
                 ignoreFiles.push(match)
                 filesToSync = filesToSync.filter(e => e.name !== match)
                 return
               }
               // to avoid Unexpected Parameter error
-              delete params['OnlyForEnv']
+              delete params.OnlyForEnv
               filesToSync = filesToSync.filter(e => e.name !== match)
               filesToSync.push({ name: match, params })
             })
@@ -534,7 +544,7 @@ class ServerlessS3Sync {
         if (
           this.options &&
           this.options.bucket &&
-          bucketName != this.options.bucket
+          bucketName !== this.options.bucket
         ) {
           // if the bucket option is given, that means we're in the subcommand where we're
           // only syncing one bucket, so only continue if this bucket name matches
@@ -542,7 +552,7 @@ class ServerlessS3Sync {
         }
 
         const bucketDir = `${bucketName}${
-          bucketPrefix == '' ? '' : bucketPrefix
+          bucketPrefix === '' ? '' : bucketPrefix
         }/`
 
         let percent = 0
@@ -555,17 +565,13 @@ class ServerlessS3Sync {
         return Promise.all(
           filesToSync.map((file, index) => {
             return new Promise(resolve => {
-              let contentTypeObject = {}
-              let detectedContentType = mime.getType(file.name)
-              if (
-                detectedContentType !== null ||
-                s.hasOwnProperty('defaultContentType')
-              ) {
-                contentTypeObject.ContentType = detectedContentType
-                  ? detectedContentType
-                  : s.defaultContentType
+              const contentTypeObject = {}
+              const detectedContentType = mime.getType(file.name)
+              if (detectedContentType !== null || s.defaultContentType) {
+                contentTypeObject.ContentType =
+                  detectedContentType || s.defaultContentType
               }
-              let params = {
+              const params = {
                 ...contentTypeObject,
                 ...file.params,
                 ...{
@@ -629,7 +635,7 @@ class ServerlessS3Sync {
 
   syncBucketTags (invokedAsCommand) {
     let s3Sync = this.serverless.service.custom.s3Sync
-    if (s3Sync.hasOwnProperty('buckets')) {
+    if (s3Sync.buckets) {
       s3Sync = s3Sync.buckets
     }
     if (!Array.isArray(s3Sync)) {
@@ -645,7 +651,7 @@ class ServerlessS3Sync {
 
     const promises = s3Sync.map(async s => {
       if (!s.bucketName && !s.bucketNameKey) {
-        throw 'Invalid custom.s3Sync'
+        throw new Error('Invalid custom.s3Sync')
       }
 
       if (!s.bucketTags) {
@@ -655,7 +661,7 @@ class ServerlessS3Sync {
       }
 
       let bucketPrefix = ''
-      if (s.hasOwnProperty('bucketPrefix')) {
+      if (s.bucketPrefix) {
         bucketPrefix = s.bucketPrefix
       }
 
@@ -669,7 +675,7 @@ class ServerlessS3Sync {
         if (
           this.options &&
           this.options.bucket &&
-          bucketName != this.options.bucket
+          bucketName !== this.options.bucket
         ) {
           // if the bucket option is given, that means we're in the subcommand where we're
           // only syncing one bucket, so only continue if this bucket name matches
@@ -744,7 +750,7 @@ class ServerlessS3Sync {
       return files
     }
     fs.readdirSync(dir).forEach(file => {
-      let fullPath = path.join(dir, file)
+      const fullPath = path.join(dir, file)
       try {
         fs.accessSync(fullPath, fs.constants.R_OK)
       } catch (e) {
@@ -779,7 +785,9 @@ class ServerlessS3Sync {
       return resolveStackOutput(this, s.bucketNameKey)
     }
 
-    throw 'Unable to find bucketName. Please provide a value for bucketName or bucketNameKey'
+    throw new Error(
+      'Unable to find bucketName. Please provide a value for bucketName or bucketNameKey'
+    )
   }
 }
 
