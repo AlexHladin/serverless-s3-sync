@@ -4,7 +4,9 @@
   "description": "A plugin to sync local directories and S3 prefixes for Serverless Framework.",
   "main": "index.js",
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "lint": "standard",
+    "lint:fix": "standard --fix"
   },
   "keywords": [
     "serverless",
@@ -24,5 +26,8 @@
   },
   "peerDependencies": {
     "serverless": "3.x || 4.x"
+  },
+  "devDependencies": {
+    "standard": "^17.1.2"
   }
 }
