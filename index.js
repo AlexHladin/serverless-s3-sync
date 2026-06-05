@@ -274,6 +274,7 @@ class ServerlessS3Sync {
         if (s.bucketPrefix) {
           bucketPrefix = s.bucketPrefix
         }
+
         let acl = 'private'
         if (s.acl) {
           acl = s.acl
@@ -283,6 +284,7 @@ class ServerlessS3Sync {
         if (s.followSymlinks) {
           followSymlinks = s.followSymlinks
         }
+
         let defaultContentType
         if (s.defaultContentType) {
           defaultContentType = s.defaultContentType
@@ -290,10 +292,12 @@ class ServerlessS3Sync {
         if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
           throw new Error('Invalid custom.s3Sync')
         }
+
         let deleteRemoved = true
-        if (s.deleteRemoved) {
+        if ('deleteRemoved' in s) {
           deleteRemoved = s.deleteRemoved
         }
+
         let preCommand
         if (s.preCommand) {
           preCommand = s.preCommand
@@ -306,7 +310,7 @@ class ServerlessS3Sync {
             return null
           }
 
-          return new Promise(resolve => {
+          return new Promise((resolve, reject) => {
             const localDir = [servicePath, s.localDir].join('/')
 
             // we're doing the upload in parallel for all buckets, so create one progress entry for each
@@ -370,7 +374,7 @@ class ServerlessS3Sync {
             const uploader = this.client().uploadDir(params)
             uploader.on('error', err => {
               bucketProgress.remove()
-              throw err
+              reject(err)
             })
             uploader.on('progress', () => {
               if (uploader.progressTotal === 0) {
@@ -438,7 +442,7 @@ class ServerlessS3Sync {
         }
 
         return this.getBucketName(s).then(bucketName => {
-          return new Promise(resolve => {
+          return new Promise((resolve, reject) => {
             const params = {
               Bucket: bucketName,
               Prefix: bucketPrefix
@@ -454,7 +458,7 @@ class ServerlessS3Sync {
             const uploader = this.client().deleteDir(params)
             uploader.on('error', err => {
               bucketProgress.remove()
-              throw err
+              reject(err)
             })
             uploader.on('progress', () => {
               if (uploader.progressTotal === 0) {
@@ -564,7 +568,7 @@ class ServerlessS3Sync {
 
         return Promise.all(
           filesToSync.map((file, index) => {
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
               const contentTypeObject = {}
               const detectedContentType = mime.getType(file.name)
               if (detectedContentType !== null || s.defaultContentType) {
@@ -602,7 +606,7 @@ class ServerlessS3Sync {
               }
               const uploader = this.client().copyObject(params)
               uploader.on('error', err => {
-                throw err
+                reject(err)
               })
               uploader.on('end', () => {
                 const current =
