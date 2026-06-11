@@ -1,9 +1,9 @@
-function getAwsOptions(provider) {
+function getAwsOptions (provider) {
   if (
     provider.cachedCredentials &&
-    typeof provider.cachedCredentials.accessKeyId != "undefined" &&
-    typeof provider.cachedCredentials.secretAccessKey != "undefined" &&
-    typeof provider.cachedCredentials.sessionToken != "undefined"
+    typeof provider.cachedCredentials.accessKeyId !== 'undefined' &&
+    typeof provider.cachedCredentials.secretAccessKey !== 'undefined' &&
+    typeof provider.cachedCredentials.sessionToken !== 'undefined'
   ) {
     return {
       // Temporarily disabled the below below because Serverless framework is not interpolating ${env:foo}
@@ -13,15 +13,15 @@ function getAwsOptions(provider) {
       credentials: {
         accessKeyId: provider.cachedCredentials.accessKeyId,
         secretAccessKey: provider.cachedCredentials.secretAccessKey,
-        sessionToken: provider.cachedCredentials.sessionToken,
-      },
-    };
+        sessionToken: provider.cachedCredentials.sessionToken
+      }
+    }
   }
 
   return {
     region: provider.getRegion() || provider.getCredentials().region,
-    credentials: provider.getCredentials().credentials,
-  };
+    credentials: provider.getCredentials().credentials
+  }
 }
 
-module.exports = getAwsOptions;
+module.exports = getAwsOptions

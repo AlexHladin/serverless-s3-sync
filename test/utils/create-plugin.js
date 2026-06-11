@@ -1,33 +1,33 @@
-const ServerlessS3Sync = require('../../index');
+const ServerlessS3Sync = require('../../index')
 
-function createLogging() {
+function createLogging () {
   return {
     log: {
       error: () => {},
       verbose: () => {},
       success: () => {},
-      notice: () => {},
+      notice: () => {}
     },
     progress: {
       create: () => ({
         update: () => {},
-        remove: () => {},
-      }),
-    },
-  };
+        remove: () => {}
+      })
+    }
+  }
 }
 
-function createPlugin({ serverless = {}, options = {}, logging } = {}) {
+function createPlugin ({ serverless = {}, options = {}, logging } = {}) {
   const defaultServerless = {
     service: {
       custom: {
-        s3Sync: {},
+        s3Sync: {}
       },
       serverless: {
         config: {
-          servicePath: '/tmp/service',
-        },
-      },
+          servicePath: '/tmp/service'
+        }
+      }
     },
     getProvider: () => ({
       getRegion: () => 'us-east-1',
@@ -35,36 +35,36 @@ function createPlugin({ serverless = {}, options = {}, logging } = {}) {
         region: 'us-east-1',
         credentials: {
           accessKeyId: 'key',
-          secretAccessKey: 'secret',
-        },
+          secretAccessKey: 'secret'
+        }
       }),
       naming: {
-        getStackName: () => 'test-stack',
+        getStackName: () => 'test-stack'
       },
       sdk: {
         CloudFormation: function () {
           return {
             describeStacks: () => ({
-              promise: () => Promise.resolve({ Stacks: [{ Outputs: [] }] }),
-            }),
-          };
+              promise: () => Promise.resolve({ Stacks: [{ Outputs: [] }] })
+            })
+          }
         },
         Endpoint: (url) => url,
         S3: function () {
-          return { shouldDisableBodySigning: () => true };
-        },
-      },
-    }),
-  };
+          return { shouldDisableBodySigning: () => true }
+        }
+      }
+    })
+  }
 
   return new ServerlessS3Sync(
     { ...defaultServerless, ...serverless },
     options,
-    logging || createLogging(),
-  );
+    logging || createLogging()
+  )
 }
 
 module.exports = {
   createLogging,
-  createPlugin,
-};
+  createPlugin
+}
