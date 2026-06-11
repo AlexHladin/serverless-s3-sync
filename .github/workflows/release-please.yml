@@ -1,0 +1,29 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      release_as:
+        description: Optional version override (e.g. 1.2.0)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or update release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: master
+          release-as: ${{ inputs.release_as }}
