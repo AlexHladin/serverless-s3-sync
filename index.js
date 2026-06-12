@@ -11,7 +11,7 @@ const fs = require('fs')
 const resolveStackOutput = require('./resolveStackOutput')
 const getAwsOptions = require('./getAwsOptions')
 const mime = require('mime')
-const child_process = require('child_process')
+const childProcess = require('child_process')
 const { toS3Path, encodeSpecialCharacters } = require('./lib/s3-path')
 const { validateS3Sync } = require('./lib/validate-s3-sync')
 
@@ -268,6 +268,7 @@ class ServerlessS3Sync {
       if (s.hasOwnProperty('bucketPrefix')) {
         bucketPrefix = s.bucketPrefix
       }
+
       let acl = 'private'
       if (s.hasOwnProperty('acl')) {
         acl = s.acl
@@ -275,28 +276,32 @@ class ServerlessS3Sync {
       if (s.hasOwnProperty('enabled') && s.enabled === false) {
         return
       }
+
       let followSymlinks = false
       if (s.hasOwnProperty('followSymlinks')) {
         followSymlinks = s.followSymlinks
       }
-      let defaultContentType = undefined
+
+      let defaultContentType = null
       if (s.hasOwnProperty('defaultContentType')) {
         defaultContentType = s.defaultContentType
       }
       if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
         throw 'Invalid custom.s3Sync'
       }
+
       let deleteRemoved = true
       if (s.hasOwnProperty('deleteRemoved')) {
         deleteRemoved = s.deleteRemoved
       }
-      let preCommand = undefined
+
+      let preCommand = null
       if (s.hasOwnProperty('preCommand')) {
         preCommand = s.preCommand
       }
 
       return this.getBucketName(s).then(bucketName => {
-        if (this.options.bucket && bucketName != this.options.bucket) {
+        if (this.options.bucket && bucketName !== this.options.bucket) {
           // if the bucket option is given, that means we're in the subcommand where we're
           // only syncing one bucket, so only continue if this bucket name matches
           return null
@@ -313,16 +318,16 @@ class ServerlessS3Sync {
             message: getProgressMessage()
           })
 
-          if (typeof preCommand != 'undefined') {
+          if (preCommand) {
             bucketProgress.update(`${localDir}: running pre-command...`)
-            child_process.execSync(preCommand, { stdio: 'inherit' })
+            childProcess.execSync(preCommand, { stdio: 'inherit' })
           }
 
           const params = {
             maxAsyncS3: 5,
             localDir,
             deleteRemoved,
-            followSymlinks: followSymlinks,
+            followSymlinks,
             getS3Params: (localFile, stat, cb) => {
               const s3Params = {}
               let onlyForEnv
@@ -354,8 +359,8 @@ class ServerlessS3Sync {
             }
           }
 
-          if (typeof defaultContentType != 'undefined') {
-            Object.assign(params, { defaultContentType: defaultContentType })
+          if (defaultContentType) {
+            Object.assign(params, { defaultContentType })
           }
 
           bucketProgress.update(getProgressMessage())
@@ -407,7 +412,7 @@ class ServerlessS3Sync {
     }
     if (!Array.isArray(s3Sync)) {
       this.log.notice(
-        `No configuration found for serverless-s3-sync, skipping removal...`
+        'No configuration found for serverless-s3-sync, skipping removal...'
       )
       return Promise.resolve()
     }
@@ -432,7 +437,7 @@ class ServerlessS3Sync {
           }
 
           let percent = 0
-          let getProgressMessage = () =>
+          const getProgressMessage = () =>
             `${bucketName}: removing files with prefix ${bucketPrefix} (${percent}%)`
           const bucketProgress = this.progress.create({
             message: getProgressMessage()
@@ -503,7 +508,8 @@ class ServerlessS3Sync {
       }
       const localDir = path.join(servicePath, s.localDir)
       let filesToSync = []
-      let ignoreFiles = ['.DS_Store']
+      const ignoreFiles = ['.DS_Store']
+
       if (Array.isArray(s.params)) {
         s.params.forEach(param => {
           const glob = Object.keys(param)[0]
@@ -534,7 +540,7 @@ class ServerlessS3Sync {
         if (
           this.options &&
           this.options.bucket &&
-          bucketName != this.options.bucket
+          bucketName !== this.options.bucket
         ) {
           // if the bucket option is given, that means we're in the subcommand where we're
           // only syncing one bucket, so only continue if this bucket name matches
@@ -542,7 +548,7 @@ class ServerlessS3Sync {
         }
 
         const bucketDir = `${bucketName}${
-          bucketPrefix == '' ? '' : bucketPrefix
+          bucketPrefix === '' ? '' : bucketPrefix
         }/`
 
         let percent = 0
@@ -555,17 +561,17 @@ class ServerlessS3Sync {
         return Promise.all(
           filesToSync.map((file, index) => {
             return new Promise(resolve => {
-              let contentTypeObject = {}
-              let detectedContentType = mime.getType(file.name)
+              const contentTypeObject = {}
+              const detectedContentType = mime.getType(file.name)
+
               if (
                 detectedContentType !== null ||
                 s.hasOwnProperty('defaultContentType')
               ) {
-                contentTypeObject.ContentType = detectedContentType
-                  ? detectedContentType
-                  : s.defaultContentType
+                contentTypeObject.ContentType =
+                  detectedContentType ?? s.defaultContentType
               }
-              let params = {
+              const params = {
                 ...contentTypeObject,
                 ...file.params,
                 ...{
@@ -669,7 +675,7 @@ class ServerlessS3Sync {
         if (
           this.options &&
           this.options.bucket &&
-          bucketName != this.options.bucket
+          bucketName !== this.options.bucket
         ) {
           // if the bucket option is given, that means we're in the subcommand where we're
           // only syncing one bucket, so only continue if this bucket name matches
@@ -744,7 +750,7 @@ class ServerlessS3Sync {
       return files
     }
     fs.readdirSync(dir).forEach(file => {
-      let fullPath = path.join(dir, file)
+      const fullPath = path.join(dir, file)
       try {
         fs.accessSync(fullPath, fs.constants.R_OK)
       } catch (e) {
