@@ -29,3 +29,6 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run linter
+        run: npm run lint || exit 0

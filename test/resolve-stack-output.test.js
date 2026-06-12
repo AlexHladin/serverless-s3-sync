@@ -1,6 +1,6 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-const resolveStackOutput = require('../resolveStackOutput');
+const { describe, it } = require('node:test')
+const assert = require('node:assert/strict')
+const resolveStackOutput = require('../resolveStackOutput')
 
 describe('resolveStackOutput', () => {
   it('returns the matching CloudFormation output value', async () => {
@@ -12,11 +12,11 @@ describe('resolveStackOutput', () => {
             region: 'us-east-1',
             credentials: {
               accessKeyId: 'key',
-              secretAccessKey: 'secret',
-            },
+              secretAccessKey: 'secret'
+            }
           }),
           naming: {
-            getStackName: () => 'my-stack',
+            getStackName: () => 'my-stack'
           },
           sdk: {
             CloudFormation: function () {
@@ -25,21 +25,21 @@ describe('resolveStackOutput', () => {
                   promise: () => Promise.resolve({
                     Stacks: [{
                       Outputs: [
-                        { OutputKey: 'BucketName', OutputValue: 'my-bucket' },
-                      ],
-                    }],
-                  }),
-                }),
-              };
-            },
-          },
-        }),
-      },
-    };
+                        { OutputKey: 'BucketName', OutputValue: 'my-bucket' }
+                      ]
+                    }]
+                  })
+                })
+              }
+            }
+          }
+        })
+      }
+    }
 
-    const value = await resolveStackOutput(plugin, 'BucketName');
-    assert.equal(value, 'my-bucket');
-  });
+    const value = await resolveStackOutput(plugin, 'BucketName')
+    assert.equal(value, 'my-bucket')
+  })
 
   it('throws when the output key is not found', async () => {
     const plugin = {
@@ -50,30 +50,30 @@ describe('resolveStackOutput', () => {
             region: 'us-east-1',
             credentials: {
               accessKeyId: 'key',
-              secretAccessKey: 'secret',
-            },
+              secretAccessKey: 'secret'
+            }
           }),
           naming: {
-            getStackName: () => 'my-stack',
+            getStackName: () => 'my-stack'
           },
           sdk: {
             CloudFormation: function () {
               return {
                 describeStacks: () => ({
                   promise: () => Promise.resolve({
-                    Stacks: [{ Outputs: [] }],
-                  }),
-                }),
-              };
-            },
-          },
-        }),
-      },
-    };
+                    Stacks: [{ Outputs: [] }]
+                  })
+                })
+              }
+            }
+          }
+        })
+      }
+    }
 
     await assert.rejects(
       () => resolveStackOutput(plugin, 'MissingOutput'),
-      /Failed to resolve stack Output 'MissingOutput'/,
-    );
-  });
-});
+      /Failed to resolve stack Output 'MissingOutput'/
+    )
+  })
+})
