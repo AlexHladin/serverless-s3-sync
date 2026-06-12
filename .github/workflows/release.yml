@@ -3,7 +3,7 @@ name: Publish npm package
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -38,13 +38,13 @@ jobs:
         run: npm test
 
       - name: Publish to npm (dry run)
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
         run: npm publish --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run != 'true')
         run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
