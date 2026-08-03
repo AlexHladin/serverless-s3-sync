@@ -19,7 +19,7 @@ $ npm install --save serverless-s3-sync-v2
 
 ```yaml
 plugins:
-  - serverless-s3-sync-v2  # was: serverless-s3-sync
+  - serverless-s3-sync-v2 # was: serverless-s3-sync
 ```
 
 3. Keep your existing `custom.s3Sync` configuration — bucket rules, hooks, CLI flags (`--nos3sync`), and the `sls s3sync` command work the same way.
@@ -53,9 +53,9 @@ plugins:
 
 Version 2.0.0 is compatible with Serverless Framework v3, but it uses the legacy logging interface. Version 3.0.0 and later uses the [new logging interface](https://www.serverless.com/framework/docs/guides/plugins/cli-output).
 
-|serverless-s3-sync-v2|Serverless Framework|
-|---|---|
-|v1.x|v3.x, v4.x|
+| serverless-s3-sync-v2 | Serverless Framework |
+| --------------------- | -------------------- |
+| v1.x                  | v3.x, v4.x           |
 
 ## Setup
 
@@ -77,7 +77,7 @@ custom:
       params: # optional
         - index.html:
             CacheControl: 'no-cache'
-        - "*.js":
+        - '*.js':
             CacheControl: 'public, max-age=31536000'
       bucketTags: # optional, these are appended to existing S3 bucket tags (overwriting tags with the same key)
         tagKey1: tagValue1
@@ -143,10 +143,10 @@ custom:
     # an alternate s3 endpoint
     endpoint: http://localhost:4569
     buckets:
-    # A simple configuration for copying static assets
-    - bucketName: my-static-site-assets # required
-      bucketPrefix: assets/ # optional
-      localDir: dist/assets # required
+      # A simple configuration for copying static assets
+      - bucketName: my-static-site-assets # required
+        bucketPrefix: assets/ # optional
+        localDir: dist/assets # required
 # ...
 ```
 
@@ -164,14 +164,15 @@ custom:
     # Disable sync when sls deploy and sls remove
     noSync: true
     buckets:
-    # A simple configuration for copying static assets
-    - bucketName: my-static-site-assets # required
-      bucketPrefix: assets/ # optional
-      localDir: dist/assets # required
+      # A simple configuration for copying static assets
+      - bucketName: my-static-site-assets # required
+        bucketPrefix: assets/ # optional
+        localDir: dist/assets # required
 # ...
 ```
 
 ### Sync on other hooks
+
 ```yaml
 custom:
   s3Sync:
@@ -179,9 +180,9 @@ custom:
       # This hook will run after the deploy:finalize hook
       - after:deploy:finalize
     buckets:
-    # A simple configuration for copying static assets
-    - bucketName: my-static-site-assets # required
-      bucketPrefix: assets/ # optional
-      localDir: dist/assets # required
+      # A simple configuration for copying static assets
+      - bucketName: my-static-site-assets # required
+        bucketPrefix: assets/ # optional
+        localDir: dist/assets # required
 # ...
 ```
