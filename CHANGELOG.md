@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/AlexHladin/serverless-s3-sync/compare/serverless-s3-sync-v2-v1.0.0...serverless-s3-sync-v2-v1.0.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* vulnerable dependencies ([#24](https://github.com/AlexHladin/serverless-s3-sync/issues/24)) ([7246a98](https://github.com/AlexHladin/serverless-s3-sync/commit/7246a98be0eac75b9d5988024ea56aa4ea66f81e))
+
 ## [1.0.0](https://github.com/AlexHladin/serverless-s3-sync/compare/serverless-s3-sync-v2-v1.0.0...serverless-s3-sync-v2-v1.0.0) (2026-06-12)
 
 ### Features
