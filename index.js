@@ -479,7 +479,7 @@ class ServerlessS3Sync {
 
   syncMetadata (invokedAsCommand) {
     let s3Sync = this.serverless.service.custom.s3Sync
-    if (s3Sync.hasOwnProperty('buckets')) {
+    if (s3Sync.buckets) {
       s3Sync = s3Sync.buckets
     }
     if (!Array.isArray(s3Sync)) {
@@ -496,11 +496,11 @@ class ServerlessS3Sync {
     const servicePath = this.servicePath
     const promises = s3Sync.map(async s => {
       let bucketPrefix = ''
-      if (s.hasOwnProperty('bucketPrefix') && s.bucketPrefix.length > 0) {
+      if (s.bucketPrefix && s.bucketPrefix.length > 0) {
         bucketPrefix = s.bucketPrefix.replace(/\/?$/, '').replace(/^\/?/, '/')
       }
       let acl = 'private'
-      if (s.hasOwnProperty('acl')) {
+      if (s.acl) {
         acl = s.acl
       }
       if ((!s.bucketName && !s.bucketNameKey) || !s.localDir) {
@@ -513,7 +513,8 @@ class ServerlessS3Sync {
       if (Array.isArray(s.params)) {
         s.params.forEach(param => {
           const glob = Object.keys(param)[0]
-          let files = this.getLocalFiles(localDir, [])
+          const files = this.getLocalFiles(localDir, [])
+
           minimatch
             .match(files, `${path.resolve(localDir)}${path.sep}${glob}`, {
               matchBase: true
@@ -521,16 +522,13 @@ class ServerlessS3Sync {
             .forEach(match => {
               const params = this.extractMetaParams(param)
               if (ignoreFiles.includes(match)) return
-              if (
-                params['OnlyForEnv'] &&
-                params['OnlyForEnv'] !== this.options.env
-              ) {
+              if (params.OnlyForEnv && params.OnlyForEnv !== this.options.env) {
                 ignoreFiles.push(match)
                 filesToSync = filesToSync.filter(e => e.name !== match)
                 return
               }
               // to avoid Unexpected Parameter error
-              delete params['OnlyForEnv']
+              delete params.OnlyForEnv
               filesToSync = filesToSync.filter(e => e.name !== match)
               filesToSync.push({ name: match, params })
             })
@@ -564,10 +562,7 @@ class ServerlessS3Sync {
               const contentTypeObject = {}
               const detectedContentType = mime.getType(file.name)
 
-              if (
-                detectedContentType !== null ||
-                s.hasOwnProperty('defaultContentType')
-              ) {
+              if (detectedContentType !== null || s.defaultContentType) {
                 contentTypeObject.ContentType =
                   detectedContentType ?? s.defaultContentType
               }
